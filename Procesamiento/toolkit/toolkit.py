@@ -35,11 +35,6 @@ def get_data(path, sheet_name=None):
         - DataFrame de pandas con los datos de la hoja seleccionada.
     """
 
-    print(f'Obteniendo datos desde el archivo: {path}')
-    if sheet_name:
-        print(f'Leyendo la hoja: {sheet_name}')
-    else:
-        print('Leyendo la primera hoja del archivo.')
     
     try:
         data = pd.read_excel(path, sheet_name=sheet_name)
@@ -127,37 +122,89 @@ def gcar_each_year(df):
     df['gcar_2023'] = df[columnas_2023].sum(axis=1)
     return df
 
-def cod_zona_buscar(df_zonas, nombre_buscar):
+
+def crecimiento_zona_gcar(df_zonas, df_gcar):
     """
-    Busca el código de una zona por una coincidencia parcial en su descripción.
+    Calcula el crecimiento porcentual de cada zona en su Tamaño Comercial entre 2022 y 2023.
 
     Parámetros:
         df_zonas (DataFrame): DataFrame con las columnas 'zona' y 'Desc'.
-        nombre_buscar (str): Parte del nombre de la zona a buscar.
+        df_gcar (DataFrame): DataFrame con columnas de meses en formato 'YYYYMM' y columnas 'gcar_2022' y 'gcar_2023'.
 
     Retorna:
-        str: Código de la zona si se encuentra, None si no se encuentra.
+        DataFrame: DataFrame con columnas adicionales 'gcar_por_zona_2022', 'gcar_por_zona_2023' y 'gcar_zona_porcentual'.
     """
-    coincidencias = df_zonas[df_zonas['Desc'].str.contains(nombre_buscar, case=False, na=False)]
-    
-    if coincidencias.empty:
-        print(f"No se encontraron coincidencias para '{nombre_buscar}' en la columna 'Desc'.")
-        return None
-        
-    return coincidencias.iloc[0]['zona']
 
-def crecimiento_zona_gcar(df_gcar,cod_zona):
+    gcar_por_zona = df_gcar.groupby('zona')[['gcar_2022', 'gcar_2023']].sum().reset_index()
+
+    # Calcular el crecimiento porcentual para cada zona
+    gcar_por_zona['gcar_zona_porcentual'] = ((gcar_por_zona['gcar_2023'] - gcar_por_zona['gcar_2022']) / gcar_por_zona['gcar_2022']) * 100
+
+    # Redondear el crecimiento porcentual a 2 decimales
+    gcar_por_zona['gcar_zona_porcentual'] = gcar_por_zona['gcar_zona_porcentual'].round(2)
+
+    # Unir con el DataFrame de zonas para obtener las descripciones
+    df_resultado = pd.merge(df_zonas, gcar_por_zona, on='zona', how='left')
+
+    return df_resultado
+
+def buscar_crecimiento_zona(df, valor_buscar):
     """
-    Calcula el crecimiento porcentual de la zona en su Tamaño Comercial entre 2022 y 2023.
+    Busca en el df con el valor de la gcar entre 2022 y 2023 en la zona de Antioquia 1.
 
     Parámetros:
-        df_gcar (DataFrame): DataFrame con columnas de meses en formato 'YYYYMM' y columnas 'gcar_2022' y 'gcar_2023'.
-        cod_zona (str): Código de la zona a calcular el crecimiento.
+        df (DataFrame): DataFrame que contiene las columnas 'zona', 'Desc', 'gcar_2022', 'gcar_2023' y 'gcar_zona_porcentual'.
+        valor_buscar (str): Antioquia 1.
+
+    """
+
+    coincidencia = df[df['Desc'].str.contains(valor_buscar, case=False, na=False)]
+    crecimiento = coincidencia['gcar_zona_porcentual'].values[0]
+    print("Actividad 1.2")
+    print(f"El valor de la GCAR en la zona {valor_buscar} con un crecimiento de {crecimiento} %")
+
+def obtener_zona_menor_gcar(df_zonas, df):
+    """
+    Encuentra la zona con el menor GCAR en el primer semestre de 2022.
+
+    Parámetros:
+        df_zonas (DataFrame): DataFrame con las columnas 'zona' y 'Desc'.
+        df (DataFrame): DataFrame con columnas de meses en formato 'YYYYMM' y una columna 'zona'.
 
     Retorna:
-        float: Crecimiento porcentual de la zona en su Tamaño Comercial entre 2022 y 2023.
+        None: Imprime la zona con el menor GCAR en el primer semestre de 2022.
     """
-    gcar_2022_zona = df_gcar[df_gcar['zona'] == cod_zona]['gcar_2022'].sum()
-    gcar_2023_zona = df_gcar[df_gcar['zona'] == cod_zona]['gcar_2023'].sum()
-    
-    return round(((gcar_2023_zona - gcar_2022_zona) / gcar_2022_zona) * 100, 2)
+    # Filtrar las columnas que empiezan por '2022' hasta el mes '202206'
+    columnas_hasta_junio_2022 = [col for col in df.columns if col.startswith('2022') and int(col[4:]) <= 6]
+
+    df['suma_hasta_junio_2022'] = df[columnas_hasta_junio_2022].sum(axis=1)
+    gcar_por_zona = df.groupby('zona')['suma_hasta_junio_2022'].sum().reset_index()
+
+    zona_menor_gcar = gcar_por_zona.loc[gcar_por_zona['suma_hasta_junio_2022'].idxmin()]
+
+    zona_menor_gcar = pd.merge(zona_menor_gcar.to_frame().T, df_zonas, on='zona', how='left')
+
+    print(f"La zona con el menor GCAR en el primer semestre de 2022 es: {zona_menor_gcar['Desc'].values[0]} con un GCAR de {zona_menor_gcar['suma_hasta_junio_2022'].values[0]}")
+
+def obtener_mayor_tc2023(df_zonas,df):
+    """
+    Encuentra la zona con el mayor Tamaño Comercial (TC) en 2023.
+
+    Parámetros:
+        df_zonas (DataFrame): DataFrame con las columnas 'zona' y 'Desc'.
+        df (DataFrame): DataFrame con columnas de meses en formato 'YYYYMM' y una columna 'zona'.
+
+    Retorna:
+        None: Imprime la zona con el mayor Tamaño Comercial en 2023.
+    """
+    columnas_2023 = [col for col in df.columns if col.startswith('2023')]
+
+    df['suma_2023'] = df[columnas_2023].sum(axis=1)
+    df['promedio_tc_2023'] = df['suma_2023'] / 12
+    tc_por_zona = df.groupby('zona')['promedio_tc_2023'].sum().reset_index()
+
+    zona_mayor_tc = tc_por_zona.loc[tc_por_zona['promedio_tc_2023'].idxmax()]
+
+    zona_mayor_tc = pd.merge(zona_mayor_tc.to_frame().T, df_zonas, on='zona', how='left')
+
+    print(f"La zona con el mayor Tamaño Comercial en 2023 es: {zona_mayor_tc['Desc'].values[0]} con un TC promedio de {zona_mayor_tc['promedio_tc_2023'].values[0]}")
