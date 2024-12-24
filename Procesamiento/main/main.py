@@ -1,9 +1,12 @@
 import json
 import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'toolkit')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'toolkit-actividad1')))
 from toolkit import cargar_parametros_json,get_data, validar_columnas_numericas
 from toolkit import gerente_mayor_crecimiento,gcar_each_year,crecimiento_zona_gcar,buscar_crecimiento_zona, obtener_zona_menor_gcar, obtener_mayor_tc2023
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'toolkit-actividad2')))
+from toolkit_act2 import calculo_reto_gcar, graficar_top5_gcar, modelo_regresion_lineal
 
 params = "Procesamiento\main\params.json"
 
@@ -27,3 +30,8 @@ if __name__ == "__main__":
     print("Actividad 1.3")
     obtener_zona_menor_gcar(df_zona_codigos, datos)
     obtener_mayor_tc2023(df_zona_codigos,datos)
+
+    #Actividad 2
+    df_gcar2024 = calculo_reto_gcar(df_gcar_each_year,parametros.get('porcetaje_crecimiento'))
+    graficar_top5_gcar(df_gcar2024)
+    modelo_regresion_lineal(df_gcar2024)
