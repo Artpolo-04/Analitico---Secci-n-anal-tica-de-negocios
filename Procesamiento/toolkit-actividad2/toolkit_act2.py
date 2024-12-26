@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import pandas as pd 
 import os
-from sklearn.linear_model import LinearRegression
 
 
 def calculo_reto_gcar(df_gcar_each_year,porcentaje_crecimiento):
@@ -53,3 +52,28 @@ def graficar_top5_gcar(df_gcar_reto):
 
     print(f"Gráfica guardada en {output_file}")
 
+def calculo_gcar_proporcionalidad(df,crecimiento):
+    """
+    Calcula el peso del gerente y el reto del gerente basado en el GCAR de 2023 y guarda los resultados en un archivo Excel.
+
+    Parámetros:
+        df (DataFrame): DataFrame con columnas 'zona', 'gerente', 'cod_rubro', 'gcar_2023'.
+
+    Retorna:
+        None
+    """
+    porcentaje_crecimiento = float(crecimiento) / 100 + 1
+
+    gcar_total_2023 = df['gcar_2023'].sum()
+
+    df['peso_gerente'] = df['gcar_2023'] / gcar_total_2023
+
+    gcar_total_2024 = gcar_total_2023 * porcentaje_crecimiento
+
+    df['reto_gerente'] = df['peso_gerente'] * gcar_total_2024
+
+    df_resultado = df[['zona', 'gerente', 'cod_rubro', 'gcar_2023', 'peso_gerente', 'reto_gerente']]
+
+    # Guardar los resultados en un archivo Excel
+    df_resultado.to_excel("Resultados/Retos_2024.xlsx", index=False)
+    print("Resultados guardados en Resultados/Retos_2024.xlsx")

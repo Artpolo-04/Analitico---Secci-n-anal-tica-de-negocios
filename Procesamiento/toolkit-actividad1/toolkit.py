@@ -52,15 +52,49 @@ def validar_columnas_numericas(df):
     :param df: DataFrame de pandas a validar
     """
     print("Validando columnas numéricas...")
+    columnas_no_numericas = []
+
     for columna in df.columns:
         # Validar si todos los valores son numéricos
         no_numericos = df[~df[columna].apply(lambda x: isinstance(x, (int, float)) or (isinstance(x, str) and x.replace(',', '').replace('.', '').isdigit()))]
         
         if not no_numericos.empty:
-            print(f"⚠️ Alerta: La columna '{columna}' contiene valores no numéricos:")
-            print(no_numericos[columna].unique())
-        else:
-            print(f"✅ La columna '{columna}' es numérica.")
+            columnas_no_numericas.append(columna)
+
+    if columnas_no_numericas:
+        print(f"⚠️ Alerta: Las siguientes columnas contienen valores no numéricos: {', '.join(columnas_no_numericas)}")
+    else:
+        print("✅ Todas las columnas son numéricas.")
+
+
+
+
+def separar_datos_publico_objetivo(df_datos, df_rubros):
+    """
+    Realiza un join entre df_datos y df_rubros utilizando la columna 'cod_rubro' y separa las coincidencias en dos DataFrames: df_gcar y df_tc.
+
+    Parámetros:
+        df_datos (DataFrame): DataFrame con los datos principales.
+        df_rubros (DataFrame): DataFrame con las columnas 'cod_rubro' y 'descripcion'.
+
+    Retorna:
+        df_gcar (DataFrame): DataFrame con las coincidencias para GCAR.
+        df_tc (DataFrame): DataFrame con las coincidencias para TC.
+    """
+    df_datos.columns = df_datos.columns.astype(str)
+
+    # Realizar el join entre df_datos y df_rubros
+    df_joined = pd.merge(df_datos, df_rubros, on='cod_rubro', how='inner')
+
+    # Separar las coincidencias en dos DataFrames diferentes
+    df_gcar = df_joined[df_joined['descri_rubro'] == 'GCAR']
+    df_tc = df_joined[df_joined['descri_rubro'] == 'Tamaño comercial']
+
+    df_gcar.head()
+
+    df_tc.head()
+
+    return df_gcar, df_tc              
 
 def calcular_crecimiento_porcentual(df):
     """
@@ -72,9 +106,6 @@ def calcular_crecimiento_porcentual(df):
     Retorna:
         DataFrame: DataFrame con columnas adicionales para el promedio anual y el crecimiento porcentual.
     """
-    # Convertir los nombres de las columnas a cadenas de texto
-    df.columns = df.columns.map(str)
-
     # Filtra columnas que son cadenas de texto y empiezan con '2022' o '2023'
     columnas_2022 = [col for col in df.columns if col.startswith('2022')]
     columnas_2023 = [col for col in df.columns if col.startswith('2023')]

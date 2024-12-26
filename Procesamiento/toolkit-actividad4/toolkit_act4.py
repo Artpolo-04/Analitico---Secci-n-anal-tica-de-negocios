@@ -1,4 +1,7 @@
 import pandas as pd
+import findspark
+findspark.init()
+
 from pyspark.sql import SparkSession
 
 def crear_datafreams():
@@ -103,18 +106,113 @@ def crear_datafreams():
 
     return spark
 
-def select_all_from_views(spark):
-    """
-    Realiza un SELECT * en cada vista temporal creada y muestra los resultados.
+def consultasActividad4(spark):
+    print("""1. Cuáles son las ventas de cada uno de los productos vendidos por categoría
+            y por cada uno de los vendedores, indique aquí los nombres de estado civil 
+            sexo y tipo de identificación de cada vendedor en la consulta  """)
+    spark.sql("""SELECT 
+                c.Descripcion AS Categoria,
+                p.Nombre AS Producto,
+                SUM(dv.Cantidad) AS CantidadVendida,
+                SUM(dv.Total) AS TotalVendido,
+                v.Nombre1 AS NombreVendedor,
+                v.Apellido1 AS ApellidoVendedor,
+                v.EstadoCivil,
+                v.Sexo,
+                v.TipoDeIdentificacion
+            FROM 
+                TblDetalleVenta dv
+            INNER JOIN 
+                TblVenta tv ON dv.IdFactura = tv.IdFactura
+            INNER JOIN 
+                TblProducto p ON dv.IdProducto = p.IdProducto
+            INNER JOIN 
+                TblCategoria c ON p.IdCategoria = c.IdCategoria
+            INNER JOIN 
+                TblVendedor v ON tv.Vendedor = v.Identificacion
+            GROUP BY 
+                c.Descripcion, 
+                p.Nombre, 
+                v.Nombre1, 
+                v.Apellido1, 
+                v.EstadoCivil, 
+                v.Sexo, 
+                v.TipoDeIdentificacion
+            ORDER BY 
+                Categoria, 
+                NombreVendedor, 
+                Producto""").show()
+    print("""
+    2. Cuáles son los productos que han tenido mayor venta y a qué vendedor pertenece?
+        """)
+    spark.sql("""
+            SELECT 
+                p.Nombre AS Producto,
+                SUM(dv.Cantidad) AS CantidadVendida,
+                SUM(dv.Total) AS TotalVendido,
+                v.Nombre1 AS NombreVendedor,
+                v.Apellido1 AS ApellidoVendedor
+            FROM 
+                TblDetalleVenta dv
+            INNER JOIN 
+                TblVenta tv ON dv.IdFactura = tv.IdFactura
+            INNER JOIN 
+                TblProducto p ON dv.IdProducto = p.IdProducto
+            INNER JOIN 
+                TblVendedor v ON tv.Vendedor = v.Identificacion
+            GROUP BY 
+                p.Nombre, 
+                v.Nombre1, 
+                v.Apellido1
+            ORDER BY 
+                TotalVendido DESC
+            LIMIT 1
 
-    Parámetros:
-        spark (SparkSession): La sesión de Spark.
-
-    Retorna:
-        None
-    """
-    views = ["TblConceptoDetalle", "TblVendedor", "TblVenta", "TblDetalleVenta", "TblProducto", "TblCategoria", "TblConcepto"]
-
-    for view in views:
-        print(f"Resultados de SELECT * FROM {view}:")
-        spark.sql(f"SELECT * FROM {view}").show()
+    """).show()
+    print("3.resumen general")
+    spark.sql("""
+                SELECT 
+                    c.Descripcion AS Categoria,
+                    p.Nombre AS Producto,
+                    SUM(dv.Cantidad) AS CantidadVendida,
+                    SUM(dv.Total) AS TotalVendido,
+                    v.Nombre1 AS NombreVendedor,
+                    v.Apellido1 AS ApellidoVendedor,
+                    v.TipoDeIdentificacion,
+                    v.EstadoCivil,
+                    v.Sexo,
+                    cd.NombreConcepto AS ConceptoDetalle,
+                    cd.Descripcion AS DetalleDescripcion,
+                    co.NombreConcepto AS Concepto,
+                    co.Descripcion AS ConceptoDescripcion
+                FROM 
+                    TblDetalleVenta dv
+                INNER JOIN 
+                    TblVenta tv ON dv.IdFactura = tv.IdFactura
+                INNER JOIN 
+                    TblProducto p ON dv.IdProducto = p.IdProducto
+                INNER JOIN 
+                    TblCategoria c ON p.IdCategoria = c.IdCategoria
+                INNER JOIN 
+                    TblVendedor v ON tv.Vendedor = v.Identificacion
+                INNER JOIN 
+                    TblConceptoDetalle cd ON cd.IdDetalleConcepto = p.IdProducto
+                INNER JOIN 
+                    TblConcepto co ON co.IdConcepto = cd.IdConcepto
+                GROUP BY 
+                    c.Descripcion, 
+                    p.Nombre, 
+                    v.Nombre1, 
+                    v.Apellido1, 
+                    v.TipoDeIdentificacion, 
+                    v.EstadoCivil, 
+                    v.Sexo, 
+                    cd.NombreConcepto, 
+                    cd.Descripcion, 
+                    co.NombreConcepto, 
+                    co.Descripcion
+                ORDER BY 
+                    Categoria, 
+                    Producto, 
+                    TotalVendido DESC
+            """).show()
