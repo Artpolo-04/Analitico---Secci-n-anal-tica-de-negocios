@@ -210,14 +210,14 @@ def obtener_zona_menor_gcar(df_zonas, df):
 
     df['suma_hasta_junio_2022'] = df[columnas_hasta_junio_2022].sum(axis=1)
     gcar_por_zona = df.groupby('zona')['suma_hasta_junio_2022'].sum().reset_index()
-
+        
     zona_menor_gcar = gcar_por_zona.loc[gcar_por_zona['suma_hasta_junio_2022'].idxmin()]
 
     zona_menor_gcar = pd.merge(zona_menor_gcar.to_frame().T, df_zonas, on='zona', how='left')
 
     print(f"La zona con el menor GCAR en el primer semestre de 2022 es: {zona_menor_gcar['Desc'].values[0]} con un GCAR de {zona_menor_gcar['suma_hasta_junio_2022'].values[0]}")
 
-def obtener_mayor_tc2023(df_zonas,df):
+def obtener_zona_mayor_tc2023(df_zonas,df):
     """
     Encuentra la zona con el mayor Tamaño Comercial (TC) en 2023.
 

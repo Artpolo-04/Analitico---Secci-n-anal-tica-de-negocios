@@ -75,5 +75,5 @@ def calculo_gcar_proporcionalidad(df,crecimiento):
     df_resultado = df[['zona', 'gerente', 'cod_rubro', 'gcar_2023', 'peso_gerente', 'reto_gerente']]
 
     # Guardar los resultados en un archivo Excel
-    df_resultado.to_excel("Resultados/Retos_2024.xlsx", index=False)
-    print("Resultados guardados en Resultados/Retos_2024.xlsx")
+    df_resultado.to_excel("Resultados/Actividad2/Retos_2024.xlsx", index=False)
+    print("Resultados guardados en Resultados/Actividad2/Retos_2024.xlsx")
