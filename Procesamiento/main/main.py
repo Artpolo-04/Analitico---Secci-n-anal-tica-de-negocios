@@ -8,6 +8,9 @@ from toolkit import gerente_mayor_crecimiento,gcar_each_year,crecimiento_zona_gc
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'toolkit-actividad2')))
 from toolkit_act2 import calculo_reto_gcar, graficar_top5_gcar, calculo_gcar_proporcionalidad
 
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'toolkit-actividad3')))
+from toolkit_act3 import calcular_gcar_por_zonas, calcular_tc_por_zonas
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'toolkit-actividad4')))
 from toolkit_act4 import crear_datafreams, consultasActividad4
 
@@ -46,6 +49,15 @@ def ejecucionAct1Act2():
     else:
         print("Actividad 2 omitida.")
 
+    punto3 = input("Desea continuar con la actividad 3? (si/no): ").strip().lower()
+    if punto3 == "si":
+        calcular_gcar_por_zonas(df_zona_codigos, df_gcar)
+        calcular_tc_por_zonas(df_zona_codigos,df_tc)
+
+    else:
+        print("Actividad 2 omitida.")
+
+
 def actividad4():
     spark = crear_datafreams()
     consultasActividad4(spark)
@@ -53,7 +65,7 @@ def actividad4():
 if __name__ == "__main__":
     while True:
         print("Menú de Actividades:")
-        print("1. Ejecutar Actividad 1 y 2")
+        print("1. Ejecutar Actividad 1, 2 y 3")
         print("4. Ejecutar Actividad 4")
         print("0. Salir")
         
